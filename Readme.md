@@ -16,6 +16,29 @@ NearbyDevices.connect(this, uuid).subscribe(new Action1<Found<String>>() {
 });
 ```
 
+Download
+============
+
+RxNearby is ready to be used via [jitpack.io](https://jitpack.io/#TechFreak/AndroidNearbyObservable).
+Simply add the following code to your root `build.gradle`:
+
+```groovy
+allprojects {
+    repositories {
+        jcenter()
+        maven { url "https://jitpack.io" }
+    }
+}
+```
+
+Now add the gradle dependency in your application's `build.gradle`:
+
+```groovy
+dependencies {
+    compile 'com.github.hugeinc:AndroidNearbyObservable:0.1'
+}
+```
+
 ## LICENSE
 
 Copyright 2016 Huge, Inc.
