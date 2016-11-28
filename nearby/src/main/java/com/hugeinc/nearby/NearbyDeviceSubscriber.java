@@ -22,29 +22,41 @@ import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 import rx.Observable;
 import rx.Subscriber;
+import rx.Subscription;
 
 class NearbyDeviceSubscriber<T> implements Observable.OnSubscribe<Found<T>> {
 
   private final int TTL_IN_SECONDS = 3 * 60;
   private final Strategy PUB_SUB_STRATEGY =
       new Strategy.Builder().setTtlSeconds(TTL_IN_SECONDS).build();
+  private final Context context;
   private final T message;
-  private final GoogleApiClient googleApiClient;
   private final Gson gson = new Gson();
+  private GoogleApiClient googleApiClient;
   private Subscriber<? super Found<T>> subscriber;
 
   NearbyDeviceSubscriber(Context context, T message) {
+    this.context = context;
     this.message = message;
+  }
+
+  @Override public void call(Subscriber<? super Found<T>> subscriber) {
+    this.subscriber = subscriber;
     googleApiClient = new GoogleApiClient.Builder(context).addApi(Nearby.MESSAGES_API,
         new MessagesOptions.Builder().build())
         .addOnConnectionFailedListener(connectionFailedListener)
         .addConnectionCallbacks(connectionCallbacks)
         .build();
-  }
-
-  @Override public void call(Subscriber<? super Found<T>> subscriber) {
-    this.subscriber = subscriber;
     googleApiClient.connect();
+    subscriber.add(new Subscription() {
+      @Override public void unsubscribe() {
+        googleApiClient.disconnect();
+      }
+
+      @Override public boolean isUnsubscribed() {
+        return googleApiClient.isConnected();
+      }
+    });
   }
 
   private MessageListener messageListener = new MessageListener() {
