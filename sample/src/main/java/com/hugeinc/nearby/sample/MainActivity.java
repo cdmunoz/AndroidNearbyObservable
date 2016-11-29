@@ -15,9 +15,8 @@ import com.hugeinc.nearby.PermissionsException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import rx.Observable;
-import rx.Subscriber;
 import rx.Subscription;
+import rx.functions.Action1;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -25,14 +24,11 @@ public class MainActivity extends AppCompatActivity {
   private static final int REQUEST_CODE = 100;
 
   private ArrayAdapter<String> mNearbyDevicesArrayAdapter;
+  private Subscription subscription;
 
   @Override protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
-    init();
-  }
-
-  private void init() {
     final List<String> nearbyDevicesArrayList = new ArrayList<>();
     mNearbyDevicesArrayAdapter =
         new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, nearbyDevicesArrayList);
@@ -40,27 +36,34 @@ public class MainActivity extends AppCompatActivity {
     if (nearbyDevicesListView != null) {
       nearbyDevicesListView.setAdapter(mNearbyDevicesArrayAdapter);
     }
+  }
+
+  @Override protected void onResume() {
+    super.onResume();
+    init();
+  }
+
+  private void init() {
     String uuid = getUUID(getSharedPreferences("name", MODE_PRIVATE));
-    Observable<Found<String>> nearby = NearbyDevices.connect(this, uuid);
-    Subscription subscription = nearby.subscribe(new Subscriber<Found<String>>() {
-      @Override public void onCompleted() {
-
-      }
-
-      @Override public void onError(Throwable e) {
-        if (e instanceof PermissionsException) {
-          requestPermissions(((PermissionsException) e).getConnectionResult());
-        }
-      }
-
-      @Override public void onNext(Found<String> stringFound) {
+    subscription = NearbyDevices.connect(this, uuid).subscribe(new Action1<Found<String>>() {
+      @Override public void call(Found<String> stringFound) {
         if (stringFound.isFound()) {
           mNearbyDevicesArrayAdapter.add(stringFound.getFoundMessage());
         } else {
           mNearbyDevicesArrayAdapter.remove(stringFound.getFoundMessage());
         }
       }
+    }, new Action1<Throwable>() {
+      @Override public void call(Throwable throwable) {
+        if (throwable instanceof PermissionsException) {
+          requestPermissions(((PermissionsException) throwable).getConnectionResult());
+        }
+      }
     });
+  }
+
+  @Override protected void onPause() {
+    super.onPause();
     subscription.unsubscribe();
   }
 
