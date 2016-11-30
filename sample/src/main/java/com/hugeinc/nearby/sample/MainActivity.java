@@ -1,5 +1,6 @@
 package com.hugeinc.nearby.sample;
 
+import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.SharedPreferences;
@@ -8,7 +9,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import com.google.android.gms.common.ConnectionResult;
 import com.hugeinc.nearby.Found;
 import com.hugeinc.nearby.NearbyDevices;
 import com.hugeinc.nearby.PermissionsException;
@@ -56,7 +56,7 @@ public class MainActivity extends AppCompatActivity {
     }, new Action1<Throwable>() {
       @Override public void call(Throwable throwable) {
         if (throwable instanceof PermissionsException) {
-          requestPermissions(((PermissionsException) throwable).getConnectionResult());
+          requestPermissions(((PermissionsException) throwable).getPendingIntent());
         }
       }
     });
@@ -67,12 +67,10 @@ public class MainActivity extends AppCompatActivity {
     subscription.unsubscribe();
   }
 
-  private void requestPermissions(ConnectionResult result) {
-    if (result.hasResolution()) {
-      try {
-        result.startResolutionForResult(this, REQUEST_CODE);
-      } catch (IntentSender.SendIntentException ignored) {
-      }
+  private void requestPermissions(PendingIntent pendingIntent) {
+    try {
+      startIntentSenderForResult(pendingIntent.getIntentSender(), REQUEST_CODE, null, 0, 0, 0);
+    } catch (IntentSender.SendIntentException ignored) {
     }
   }
 

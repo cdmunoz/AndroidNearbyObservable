@@ -1,15 +1,15 @@
 package com.hugeinc.nearby;
 
-import com.google.android.gms.common.ConnectionResult;
+import android.app.PendingIntent;
 
 public class PermissionsException extends Throwable {
-  private ConnectionResult connectionResult;
+  private PendingIntent pendingIntent;
 
-  public PermissionsException(ConnectionResult connectionResult) {
-    this.connectionResult = connectionResult;
+  public PermissionsException(PendingIntent pendingIntent) {
+    this.pendingIntent = pendingIntent;
   }
 
-  public ConnectionResult getConnectionResult() {
-    return connectionResult;
+  public PendingIntent getPendingIntent() {
+    return pendingIntent;
   }
 }

@@ -124,7 +124,9 @@ class NearbyDeviceSubscriber<T> implements Observable.OnSubscribe<Found<T>> {
     Nearby.Messages.publish(googleApiClient, publishMessage, options)
         .setResultCallback(new ResultCallback<Status>() {
           @Override public void onResult(@NonNull Status status) {
-            if (!status.isSuccess()) {
+            if (status.getResolution() != null) {
+              subscriber.onError(new PermissionsException(status.getResolution()));
+            } else if (!status.isSuccess()) {
               subscriber.onError(new ConnectionErrorException());
             }
           }
@@ -155,7 +157,7 @@ class NearbyDeviceSubscriber<T> implements Observable.OnSubscribe<Found<T>> {
       new GoogleApiClient.OnConnectionFailedListener() {
         @Override public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
           if (connectionResult.getResolution() != null) {
-            subscriber.onError(new PermissionsException(connectionResult));
+            subscriber.onError(new PermissionsException(connectionResult.getResolution()));
           } else {
             subscriber.onError(new ConnectionErrorException());
           }
